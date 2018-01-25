@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css">
+  <link rel="stylesheet" href="https://v40.pingendo.com/assets/bootstrap/bootstrap-4.0.0-beta.1.css" type="text/css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+  <script src="https://cdn.rawgit.com/fend25/strg.js/1.1.0/strg.min.js"></script>
+  <script src="https://rawgit.com/zulfajuniadi/90bb76746a31904cd5e000f5ffa89064/raw/9b49b03a07d8f69cf0ed741045a03c58401ddd6a/gistfile1.js"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh"
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1"
+    crossorigin="anonymous"></script>
+</head>
+
+<body ng-app="App" ng-controller="AppController">
+  <nav class="navbar navbar-expand-md bg-secondary navbar-dark fixed-top">
+    <div class="container-fluid">
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <form class="form-inline mr-auto">
+          <select name="year" ng-model="year" class="form-control">
+            <option value="0">Year</option>
+            <option value="2017">2017</option>
+            <option value="2016">2016</option>
+            <option value="2015">2015</option>
+            <option value="2014">2014</option>
+          </select> &nbsp; &nbsp;
+          <input ng-model="tools" class="form-control" type="text" placeholder="Tools Search"> &nbsp; &nbsp;
+          <input ng-model="search" class="form-control" type="text" placeholder="Fulltext Search"> &nbsp; &nbsp;
+          <input type="range" min="0" max="1073741824" step="10485760" ng-model="minSize"> &nbsp; &nbsp;
+          <div class="form-check mb-2 mr-sm-2 mb-sm-0">
+            <label class="form-check-label text-white">
+              <input class="form-check-input" type="checkbox" ng-model="hasVideo"> Has Video
+            </label>
+          </div>
+          <label class="text-white">
+            [{{totalCount}} items > {{minSize | bytes}}]
+          </label>
+        </form>
+        <paging class="small ml-auto" style="height:32px" page="currentPage" page-size="perPage" total="totalCount" show-prev-next="true"
+          show-first-last="true" ul-class="pagination" active-class="active" disabled-class="disabled"></paging>
+      </div>
+    </div>
+  </nav>
+  <br>
+  <div class="py-5 bg-light text-dark">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-xl-2 col-lg-3 col-md-4 my-2" ng-repeat="project in projects">
+          <div class="card">
+            <div class="card-header bg-primary text-white text-center">{{project.year}} {{project.title}}
+              <br>
+            </div>
+            <img class="img-fluid" ng-src="{{project.imageUrl}}" alt="Card image">
+            <div class="card-body">
+              <p class="card-text p-y-1">{{project.description}}
+                <br>
+              </p>
+              <p>{{project.site}}</p>
+              <p ng-show="project.tools">
+                <b>{{project.tools}}</b>
+              </p>
+              <p ng-show="project.techNotes">
+                <b>{{project.techNotes}}</b>
+              </p>
+              <p>
+                Source: {{project.fileSize | bytes}}
+              </p>
+              <div class="btn-group">
+                <a class="btn btn-danger" ng-if="project.hasVideo" href="{{project.videoUrl}}" target="_blank">Video</a>
+                <a target="_blank" href="{{project.pageUrl}}" class="btn btn-primary">Show</a>
+                <a href="{{project.downloadUrl}}" class="btn btn-secondary">Download</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <hr>
+          <paging class="small float-right" style="height:32px" page="currentPage" page-size="perPage" total="totalCount" show-prev-next="true"
+            show-first-last="true" ul-class="pagination" active-class="active" disabled-class="disabled"></paging>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    angular.module("App", ['bw.paging'])
+      .controller("AppController", function ($http, $scope) {
+        var stored = store.getAll();
+        console.log(stored);
+        $scope.year = stored.year || "0";
+        $scope.hasVideo = stored.hasVideo || false;
+        $scope.minSize = stored.minSize || 0;
+        $scope.search = stored.search || "";
+        $scope.tools = stored.tools || "";
+        $scope.currentPage = stored.currentPage || 1;
+        $scope.totalCount = 0;
+        $scope.perPage = 60;
+        $scope.projects = [];
+        $scope.getProjects = function () {
+          store.set('year', $scope.year);
+          store.set('hasVideo', $scope.hasVideo);
+          store.set('minSize', $scope.minSize);
+          store.set('search', $scope.search);
+          store.set('tools', $scope.tools);
+          store.set('currentPage', $scope.currentPage);
+          var toolsQuery = "";
+          if ($scope.tools != "") {
+            toolsQuery = "&tools_like=" + $scope.tools;
+          }
+          var yearQuery = "";
+          if ($scope.year != "0") {
+            yearQuery = "&year=" + $scope.year;
+          }
+          var hasVideoQuery = "";
+          if ($scope.hasVideo) {
+            hasVideoQuery = "&hasVideo=1";
+          }
+          $http.get(
+              `/projects?_sort=title&_order=asc${toolsQuery}${yearQuery}${hasVideoQuery}&fileSize_gte=${$scope.minSize}&q=${$scope.search}&_start=${($scope.currentPage - 1) * $scope.perPage}&_limit=${$scope.perPage}`
+            )
+            .then(function (response) {
+              $scope.totalCount = response.headers("X-Total-Count");
+              $scope.projects = response.data;
+              window.scroll({
+                top: 0,
+                left: 0,
+                behavior: 'smooth'
+              });
+            });
+        }
+        $scope.getProjects(0);
+        $scope.$watch("year", function () {
+          $scope.getProjects();
+        });
+        $scope.$watch("hasVideo", function () {
+          $scope.getProjects();
+        });
+        $scope.$watch("tools", function () {
+          $scope.getProjects();
+        });
+        $scope.$watch("search", function () {
+          $scope.getProjects();
+        });
+        $scope.$watch("minSize", function () {
+          $scope.getProjects();
+        });
+        $scope.$watch("currentPage", function () {
+          $scope.getProjects();
+        });
+        setTimeout(function () {
+          $scope.$digest();
+        }, 10);
+      })
+      .filter('bytes', function () {
+        return function (bytes, precision) {
+          if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) return '-';
+          if (typeof precision === 'undefined') precision = 1;
+          if (bytes == 0) return '0 bytes';
+          var units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'],
+            number = Math.floor(Math.log(bytes) / Math.log(1024));
+          return (bytes / Math.pow(1024, Math.floor(number))).toFixed(precision) + ' ' + units[number];
+        }
+      });
+  </script>
+</body>
+
+</html>

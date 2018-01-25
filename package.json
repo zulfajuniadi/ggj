@@ -1,0 +1,21 @@
+{
+  "name": "ggj2017",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "./node_modules/json-server/bin/index.js public/db.json --static public"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "cherio": "^1.0.0-rc.2",
+    "json-server": "^0.12.1",
+    "queue": "^4.4.2",
+    "remote-file-size": "^3.0.4",
+    "request": "^2.83.0",
+    "taffy": "^2.6.2"
+  }
+}
